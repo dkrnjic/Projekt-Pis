@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import sqlite3
 import os
 
@@ -70,6 +70,82 @@ def get_putovanja():
         putovanja_list.append(putovanje_dict)
 
     return jsonify(putovanja_list)
+
+
+# Endpoint for retrieving a specific travel entry
+@app.route("/putovanja/<int:id>", methods=["GET"])
+def get_putovanje(id):
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Putovanje WHERE id = ?", (id,))
+    putovanje = cur.fetchone()
+    conn.close()
+
+    if putovanje is None:
+        return jsonify({"message": "Putovanje nije pronađeno!"}), 404
+
+    putovanje_dict = {
+        "id": putovanje[0],
+        "destinacija": putovanje[1],
+        "datum": putovanje[2],
+        "aktivnosti": putovanje[3],
+        "troskovi": putovanje[4],
+        "dojmovi": putovanje[5],
+    }
+
+    return jsonify(putovanje_dict)
+
+
+# Endpoint for updating a specific travel entry
+@app.route("/putovanja/<int:id>", methods=["PUT"])
+def update_putovanje(id):
+    data = request.get_json()
+    destinacija = data["destinacija"]
+    datum = data["datum"]
+    aktivnosti = data["aktivnosti"]
+    troskovi = data["troskovi"]
+    dojmovi = data["dojmovi"]
+
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Putovanje WHERE id = ?", (id,))
+    putovanje = cur.fetchone()
+
+    if putovanje is None:
+        return jsonify({"message": "Putovanje nije pronađeno!"}), 404
+
+    cur.execute(
+        "UPDATE Putovanje SET destinacija = ?, datum = ?, aktivnosti = ?, troskovi = ?, dojmovi = ? WHERE id = ?",
+        (destinacija, datum, aktivnosti, troskovi, dojmovi, id),
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Putovanje je uspješno ažurirano!"})
+
+
+# Endpoint for deleting a specific travel entry
+@app.route("/putovanja/<int:id>", methods=["DELETE"])
+def delete_putovanje(id):
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Putovanje WHERE id = ?", (id,))
+    putovanje = cur.fetchone()
+
+    if putovanje is None:
+        return jsonify({"message": "Putovanje nije pronađeno!"}), 404
+
+    cur.execute("DELETE FROM Putovanje WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"message": "Putovanje je uspješno obrisano!"})
+
+
+# Define root route
+@app.route("/")
+def root():
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
