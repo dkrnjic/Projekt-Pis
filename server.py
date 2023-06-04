@@ -7,6 +7,12 @@ base_dir = os.path.abspath(os.path.dirname(__file__))
 db_path = "PutovanjaBaza.db1"
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
+cursor.execute(
+    """CREATE TABLE Putovanje
+                  (id INTEGER PRIMARY KEY AUTOINCREMENT, destinacija TEXT, datum DATE, aktivnosti TEXT,
+                   troskovi REAL, dojmovi TEXT)
+               """
+)
 app = Flask(__name__)
 
 
@@ -72,7 +78,7 @@ def get_putovanja():
     return jsonify(putovanja_list)
 
 
-# Endpoint for retrieving a specific travel entry
+# Endpoint za dohvacanje putovanja po id-u
 @app.route("/putovanja/<int:id>", methods=["GET"])
 def get_putovanje(id):
     conn = sqlite3.connect(db_path)
@@ -96,7 +102,7 @@ def get_putovanje(id):
     return jsonify(putovanje_dict)
 
 
-# Endpoint for updating a specific travel entry
+# Endpoint za azuriranje putovanja po id-u
 @app.route("/putovanja/<int:id>", methods=["PUT"])
 def update_putovanje(id):
     data = request.get_json()
@@ -124,7 +130,7 @@ def update_putovanje(id):
     return jsonify({"message": "Putovanje je uspješno ažurirano!"})
 
 
-# Endpoint for deleting a specific travel entry
+# Endpoint za brisanje putovanja po id-u
 @app.route("/putovanja/<int:id>", methods=["DELETE"])
 def delete_putovanje(id):
     conn = sqlite3.connect(db_path)
@@ -142,7 +148,7 @@ def delete_putovanje(id):
     return jsonify({"message": "Putovanje je uspješno obrisano!"})
 
 
-# Define root route
+# ROOT route
 @app.route("/")
 def root():
     return render_template("index.html")
