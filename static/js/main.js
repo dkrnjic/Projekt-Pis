@@ -8,8 +8,10 @@ let submit = document.getElementById('submit');
 let elementTable =  document.getElementById('element');
 let editBTN = document.getElementsByClassName('editBTN')[0];
 let deleteBTN = document.getElementsByClassName('deleteBTN')[0];
+let selectButton = document.getElementById('selectButton');
 
-getPutovanja()
+
+
 linksArray[0].addEventListener('click',()=>{
     publicId=-1;
     table.style.display= "none";
@@ -48,14 +50,17 @@ editBTN.addEventListener('click',()=>{
     table.style.display= "block";
 })
 deleteBTN.addEventListener('click',()=>{
-
-
     DeletePutovanje(publicId); 
     aboutSection.style.display= "none";
     dodajUTablicu.style.display= "none";
     elementTable.style.display= "none";
     table.style.display= "block";
 })
+
+selectButton.addEventListener('click',()=>{
+    getPutovanja()
+})
+
 let publicId=-1;
 const keys = ['destinacija', 'datum', 'aktivnosti', 'troskovi', 'dojmovi'];
 
@@ -71,53 +76,84 @@ submit.addEventListener('click', (e)=>{
     } 
 })
 
-async function getPutovanja(){
-    const res = await fetch('http://127.0.0.1:8000/putovanja',{
-        method: 'GET',
-    })
-    if (res.ok) {
-        const result = await res.json();
-        const tbody = document.querySelector('#putovanja-table tbody');
-        tbody.innerHTML = '';
-        result.forEach(putovanje => {
-            const row = document.createElement('tr');
-            row.style.zIndex= -10;
-            row.innerHTML = `
-                <td>${putovanje.destinacija}</td>
-                <td>${putovanje.datum}</td>
-                <td>${putovanje.aktivnosti}</td>
-                <td>${putovanje.troskovi}</td>
-                <td>${putovanje.dojmovi}</td>
-                
-            `;
-            /* <td class="edit-btn">edit</td>
-                <td class="delete-btn">X</td> 
-            const editBtn = row.querySelector('.edit-btn');
-            editBtn.style.zIndex= 10;
-            editBtn.addEventListener('click', () => {
-                const id = putovanje.id; 
-                GetPutovanjePoID(id); 
-              });
-            const deleteBtn = row.querySelector('.delete-btn');
-            deleteBtn.style.zIndex= 10;
-            deleteBtn.addEventListener('click', () => {
-                const id = putovanje.id; 
-                DeletePutovanje(id); 
-              });
-              */ 
-            row.addEventListener('click',()=>{
-                const id = putovanje.id; 
-                GetPutovanjePoID2(id); 
-            })
+let sortDirection = 'ASC'; 
 
-            tbody.appendChild(row);
-          });
-        }
-    else{
-        console.log("nije mogao dobiti ime");
-    }
+
+function toggleSortDirection() {
+  sortDirection = sortDirection === 'ASC' ? 'DESC' : 'ASC';
 }
 
+async function getPutovanja() {
+  const sortSelect = document.querySelector('#sortSelect');
+  const selectedOption = sortSelect ? sortSelect.value : null;
+
+  const url = new URL('http://127.0.0.1:8000/putovanja');
+  if (selectedOption) {
+    url.searchParams.set('sort', selectedOption);
+    url.searchParams.set('sort_direction', sortDirection); 
+  }
+
+  const res = await fetch(url, {
+    method: 'GET',
+  });
+
+  if (res.ok) {
+    let result = await res.json();
+    const tbody = document.querySelector('#putovanja-table tbody');
+    tbody.innerHTML = '';
+
+    if (sortDirection === 'ASC') {
+      result.forEach(putovanje => {
+        const row = createTableRow(putovanje);
+        tbody.appendChild(row);
+        row.addEventListener('click', () => {
+            const id = putovanje.id;
+            GetPutovanjePoID2(id);
+          });
+      });
+    } else if (sortDirection === 'DESC') {
+      for (let i = result.length - 1; i >= 0; i--) {
+        const putovanje = result[i];
+        const row = createTableRow(putovanje);
+        tbody.appendChild(row);
+        row.addEventListener('click', () => {
+            const id = putovanje.id;
+            GetPutovanjePoID2(id);
+          });
+      }
+    }
+  } else {
+    console.log("nije mogao dobiti ime");
+  }
+  
+}
+getPutovanja()
+
+
+function createTableRow(putovanje) {
+  const row = document.createElement('tr');
+  row.style.zIndex = -10;
+  row.innerHTML = `
+      <td>${putovanje.destinacija}</td>
+      <td>${putovanje.datum}</td>
+      <td>${putovanje.aktivnosti}</td>
+      <td>${putovanje.troskovi}</td>
+      <td>${putovanje.dojmovi}</td>
+  `;
+  return row;
+}
+
+
+function handleToggleSort() {
+  toggleSortDirection();
+  getPutovanja(); 
+}
+
+
+const toggleSortButton = document.querySelector('#toggleSortButton');
+toggleSortButton.addEventListener('click', handleToggleSort);
+
+  
 async function PostPutovanje(){
     const putovanjeData = {};
     inputArray.forEach((value, index) => {
@@ -134,13 +170,13 @@ async function PostPutovanje(){
         )
     })
     if (res.ok) {
-        alert("dodano novo putovanje")
-        window.location.href = "http://127.0.0.1:8000/"
+        alert("Putovanje uspjesno dodano!")
         }
     else{
         alert("Nes ne radi!");
     }
 }
+
 
 /* Po id GET */
 async function GetPutovanjePoID(id){

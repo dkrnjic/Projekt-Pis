@@ -57,9 +57,22 @@ def create_putovanje():
 # Endpoint za dohvacanje svih putovanja iz baze
 @app.route("/putovanja", methods=["GET"])
 def get_putovanja():
+    sort_by = request.args.get("sort")
+
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM Putovanje")
+
+    # Moidifciranje po sortu
+    if sort_by == "destinacija":
+        query = "SELECT * FROM Putovanje ORDER BY destinacija"
+    elif sort_by == "datum":
+        query = "SELECT * FROM Putovanje ORDER BY datum"
+    elif sort_by == "troskovi":
+        query = "SELECT * FROM Putovanje ORDER BY troskovi ASC"
+    else:
+        query = "SELECT * FROM Putovanje"
+
+    cur.execute(query)
     putovanja = cur.fetchall()
     conn.close()
 
