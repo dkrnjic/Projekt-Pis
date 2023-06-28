@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import sqlite3
+from flask_cors import CORS
 import os
 
 base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -14,6 +15,10 @@ cursor.execute(
                """
 )
 app = Flask(__name__)
+cors = CORS(
+    app,
+    resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "PATCH", "DELETE"]}},
+)
 
 
 # Endpoint za kreiranje tablice
