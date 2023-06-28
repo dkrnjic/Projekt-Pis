@@ -21,6 +21,11 @@ cors = CORS(
 )
 
 
+@app.route("/")
+def hello_world():
+    return jsonify({"message": "Hello, World!"})
+
+
 # Endpoint za kreiranje tablice
 @app.route("/create", methods=["POST"])
 def kreirajDb():
